@@ -1,17 +1,25 @@
 package com.streamlined.practice;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Queue;
 
 public class QuickSorter<T> implements Sorter<T> {
 
 	private final Comparator<T> comparator;
 	private final List<T> data;
+	private final Queue<Range> rangeList;
 
 	public QuickSorter(Comparator<T> comparator, List<T> data) {
 		this.comparator = comparator;
 		this.data = data;
+		rangeList = new ArrayDeque<>(getInitialCapacity(data.size()));
+	}
+
+	private int getInitialCapacity(int size) {
+		return size;
 	}
 
 	@Override
@@ -21,11 +29,21 @@ public class QuickSorter<T> implements Sorter<T> {
 	}
 
 	private void sort(int start, int finish) {
-		if (start < finish) {
-			int splitIndex = partitionData(start, finish);
-			sort(start, splitIndex);
-			sort(splitIndex + 1, finish);
+
+		rangeList.add(new Range(start, finish));
+
+		for (Range range; (range = rangeList.poll()) != null;) {
+
+			int splitIndex = partitionData(range.start, range.finish);
+			if (range.start < splitIndex) {
+				rangeList.add(new Range(range.start, splitIndex));
+			}
+			if (splitIndex + 1 < range.finish) {
+				rangeList.add(new Range(splitIndex + 1, range.finish));
+			}
+
 		}
+
 	}
 
 	private int partitionData(int start, int finish) {
@@ -60,6 +78,9 @@ public class QuickSorter<T> implements Sorter<T> {
 
 	private T getPivot(int start, int finish) {
 		return data.get((start + finish + 1) / 2);
+	}
+
+	private static record Range(int start, int finish) {
 	}
 
 }
